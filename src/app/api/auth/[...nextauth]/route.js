@@ -3,6 +3,11 @@ import GithubProvider from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 
+// FORCE PRODUCTION URL (Debugging Netlify Issue)
+if (process.env.NODE_ENV === 'production') {
+    process.env.NEXTAUTH_URL = 'https://darling-cascaron-7b3923.netlify.app';
+}
+
 export const authOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
