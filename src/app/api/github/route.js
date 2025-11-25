@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import { calculateXP } from '@/lib/gamification';
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(request) {
     console.log("🔔 Webhook Request Received!");
@@ -83,24 +85,40 @@ export async function POST(request) {
 }
 
 export async function GET() {
-    // Return recent contributions from DB
-    const contributions = await prisma.contribution.findMany({
-        take: 50,
-        orderBy: { timestamp: 'desc' },
-        include: { user: true },
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user) {
+        return NextResponse.json({
+            xp: 0,
+            level: 1,
+            contributions: []
+        });
+    }
+
+    // Fetch User's specific stats
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: {
+            contributions: {
+                take: 50,
+                orderBy: { timestamp: 'desc' }
+            }
+        }
     });
 
-    // Calculate total stats (mocking the single user view for now if not logged in)
-    // In a real app, this would be filtered by the logged-in user
+    if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const stats = {
-        xp: contributions.reduce((acc, curr) => acc + curr.xp, 0),
-        level: 1, // Placeholder
-        contributions: contributions.map(c => ({
+        xp: user.xp,
+        level: user.level,
+        contributions: user.contributions.map(c => ({
             id: c.id,
             message: c.message,
             xp: c.xp,
             timestamp: c.timestamp,
-            user: c.user?.name || 'Unknown'
+            user: user.name || 'You'
         }))
     };
 
