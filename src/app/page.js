@@ -3,16 +3,20 @@
 import { useState, useEffect } from 'react';
 import StatsCard from '@/components/Dashboard/StatsCard';
 import Link from 'next/link';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 export default function Home() {
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/github');
-      const data = await res.json();
-      setStats(data);
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
     } catch (error) {
       console.error('Failed to fetch stats', error);
     } finally {
@@ -21,8 +25,12 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (status === 'authenticated') {
+      fetchStats();
+    } else if (status === 'unauthenticated') {
+      setLoading(false);
+    }
+  }, [status]);
 
   const simulateEvent = async (type) => {
     const payload = {
@@ -39,7 +47,78 @@ export default function Home() {
     fetchStats();
   };
 
-  if (loading) return <div className="loading">Loading Udriven...</div>;
+  if (status === 'loading' || loading) return <div className="loading">Loading Udriven...</div>;
+
+  if (status === 'unauthenticated') {
+    return (
+      <main className="landing">
+        <div className="landing-content">
+          <h1 className="landing-title">Udriven</h1>
+          <p className="landing-subtitle">Gamify Your GitHub Productivity</p>
+          <p className="landing-desc">Track contributions, earn XP, compete on leaderboards, and level up your coding journey.</p>
+
+          <button onClick={() => signIn('github')} className="btn-login">
+            <span className="github-icon">⚡</span>
+            Login with GitHub
+          </button>
+        </div>
+
+        <style jsx>{`
+            .landing {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                padding: 24px;
+                background: radial-gradient(circle at center, rgba(99, 102, 241, 0.1), transparent 50%);
+            }
+            .landing-title {
+                font-size: 4rem;
+                font-weight: 800;
+                background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 16px;
+                letter-spacing: -2px;
+            }
+            .landing-subtitle {
+                font-size: 1.5rem;
+                color: #6366f1;
+                margin-bottom: 24px;
+                font-weight: 600;
+            }
+            .landing-desc {
+                font-size: 1.1rem;
+                color: var(--text-muted);
+                max-width: 600px;
+                margin-bottom: 48px;
+                line-height: 1.6;
+            }
+            .btn-login {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: white;
+                color: black;
+                font-weight: bold;
+                font-size: 1.1rem;
+                padding: 16px 32px;
+                border-radius: 50px;
+                border: none;
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+                box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            }
+            .btn-login:hover {
+                transform: scale(1.05);
+                box-shadow: 0 0 30px rgba(255,255,255,0.4);
+            }
+        `}</style>
+      </main>
+    );
+  }
 
   return (
     <main className="main">
@@ -48,13 +127,38 @@ export default function Home() {
         <div className="links">
           <Link href="/" className="active">Dashboard</Link>
           <Link href="/community">Community</Link>
+          <Link href="/leaderboard">Leaderboard</Link>
+          <button onClick={() => signOut()} className="btn-logout">Logout</button>
         </div>
       </nav>
 
       <div className="content">
         <div className="dashboard-grid">
           <div className="left-col">
-            <StatsCard stats={stats} />
+            {stats && <StatsCard stats={stats} />}
+
+            {/* Weekly Goal Section */}
+            {stats && (
+              <div className="goal-card">
+                <h3>🎯 Weekly Goal</h3>
+                {stats.weeklyGoals && stats.weeklyGoals.length > 0 ? (
+                  <div className="goal-content">
+                    <p className="goal-desc">{stats.weeklyGoals[0].description}</p>
+                    <div className="goal-progress">
+                      <span>{stats.weeklyGoals[0].current} / {stats.weeklyGoals[0].target}</span>
+                      <div className="progress-bar">
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${Math.min((stats.weeklyGoals[0].current / stats.weeklyGoals[0].target) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="no-goal">No active goal for this week.</p>
+                )}
+              </div>
+            )}
 
             <div className="simulation-card">
               <h3>Simulate Activity</h3>
@@ -68,13 +172,19 @@ export default function Home() {
                 </button>
               </div>
             </div>
+
+            <div className="leave-section">
+              <Link href="/leaves" className="btn-leave">
+                📅 Request Leave
+              </Link>
+            </div>
           </div>
 
           <div className="right-col">
             <div className="activity-feed">
               <h3>Recent Activity</h3>
               <div className="feed-list">
-                {stats.contributions.map((item) => (
+                {stats && stats.contributions.map((item) => (
                   <div key={item.id} className="feed-item">
                     <span className="feed-icon">⚡</span>
                     <div className="feed-content">
@@ -84,7 +194,7 @@ export default function Home() {
                     <span className="feed-xp">+{item.xp} XP</span>
                   </div>
                 ))}
-                {stats.contributions.length === 0 && (
+                {stats && stats.contributions.length === 0 && (
                   <p className="empty-feed">No recent activity.</p>
                 )}
               </div>
@@ -125,6 +235,7 @@ export default function Home() {
         .links {
           display: flex;
           gap: 24px;
+          align-items: center;
         }
         .links a {
           color: var(--text-muted);
@@ -132,6 +243,20 @@ export default function Home() {
         }
         .links a.active, .links a:hover {
           color: var(--foreground);
+        }
+        .btn-logout {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
         }
         .dashboard-grid {
           display: grid;
@@ -149,6 +274,7 @@ export default function Home() {
           border: 1px solid var(--card-border);
           border-radius: 16px;
           padding: 24px;
+          backdrop-filter: var(--backdrop-blur);
         }
         .simulation-card h3 {
           margin-bottom: 8px;
@@ -184,6 +310,7 @@ export default function Home() {
           padding: 24px;
           height: 100%;
           min-height: 400px;
+          backdrop-filter: var(--backdrop-blur);
         }
         .activity-feed h3 {
           margin-bottom: 20px;
@@ -233,6 +360,66 @@ export default function Home() {
           color: var(--text-muted);
           text-align: center;
           margin-top: 40px;
+        }
+        .goal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+            backdrop-filter: var(--backdrop-blur);
+        }
+        .goal-content {
+            margin-top: 12px;
+        }
+        .goal-desc {
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .goal-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .goal-progress span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            align-self: flex-end;
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.5s ease;
+        }
+        .no-goal {
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 8px;
+        }
+        .leave-section {
+            margin-top: 24px;
+        }
+        .btn-leave {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .btn-leave:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-2px);
         }
       `}</style>
     </main>

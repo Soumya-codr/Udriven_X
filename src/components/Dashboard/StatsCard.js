@@ -1,54 +1,55 @@
 import { getBadges, getNextBadge } from '@/lib/gamification';
 
 export default function StatsCard({ stats }) {
-    const badges = getBadges(stats.xp);
-    const nextBadge = getNextBadge(stats.xp);
-    const progressToNext = nextBadge
-        ? ((stats.xp - (badges[0]?.minXP || 0)) / (nextBadge.minXP - (badges[0]?.minXP || 0))) * 100
-        : 100;
+  const badges = getBadges(stats.xp);
+  const nextBadge = getNextBadge(stats.xp);
+  const progressToNext = nextBadge
+    ? ((stats.xp - (badges[0]?.minXP || 0)) / (nextBadge.minXP - (badges[0]?.minXP || 0))) * 100
+    : 100;
 
-    return (
-        <div className="stats-card">
-            <div className="header">
-                <div className="avatar">
-                    <span>{stats.level}</span>
-                </div>
-                <div className="info">
-                    <h2>User Level {stats.level}</h2>
-                    <p className="xp">{stats.xp} XP</p>
-                </div>
-            </div>
+  return (
+    <div className="stats-card">
+      <div className="header">
+        <div className="avatar">
+          <span>{stats.level}</span>
+        </div>
+        <div className="info">
+          <h2>User Level {stats.level}</h2>
+          <p className="xp">{stats.xp} XP</p>
+          <p className="credits">💎 {stats.credits || 0} Credits</p>
+        </div>
+      </div>
 
-            <div className="progress-container">
-                <div className="progress-label">
-                    <span>Progress to {nextBadge ? nextBadge.name : 'Max Level'}</span>
-                    <span>{Math.min(Math.round(progressToNext), 100)}%</span>
-                </div>
-                <div className="progress-bar">
-                    <div
-                        className="progress-fill"
-                        style={{ width: `${Math.min(progressToNext, 100)}%` }}
-                    ></div>
-                </div>
-            </div>
+      <div className="progress-container">
+        <div className="progress-label">
+          <span>Progress to {nextBadge ? nextBadge.name : 'Max Level'}</span>
+          <span>{Math.min(Math.round(progressToNext), 100)}%</span>
+        </div>
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{ width: `${Math.min(progressToNext, 100)}%` }}
+          ></div>
+        </div>
+      </div>
 
-            <div className="badges-section">
-                <h3>Badges Earned</h3>
-                <div className="badges-grid">
-                    {badges.length > 0 ? (
-                        badges.map(badge => (
-                            <div key={badge.id} className="badge" title={badge.name}>
-                                <span className="badge-icon">{badge.icon}</span>
-                                <span className="badge-name">{badge.name}</span>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="no-badges">No badges yet. Start coding!</p>
-                    )}
-                </div>
-            </div>
+      <div className="badges-section">
+        <h3>Badges Earned</h3>
+        <div className="badges-grid">
+          {badges.length > 0 ? (
+            badges.map(badge => (
+              <div key={badge.id} className="badge" title={badge.name}>
+                <span className="badge-icon">{badge.icon}</span>
+                <span className="badge-name">{badge.name}</span>
+              </div>
+            ))
+          ) : (
+            <p className="no-badges">No badges yet. Start coding!</p>
+          )}
+        </div>
+      </div>
 
-            <style jsx>{`
+      <style jsx>{`
         .stats-card {
           background: var(--card-bg);
           border: 1px solid var(--card-border);
@@ -85,6 +86,12 @@ export default function StatsCard({ stats }) {
         .xp {
           color: var(--primary);
           font-weight: bold;
+        }
+        .credits {
+          color: #fbbf24;
+          font-weight: bold;
+          font-size: 0.9rem;
+          margin-top: 4px;
         }
         .progress-container {
           margin-bottom: 24px;
@@ -137,6 +144,6 @@ export default function StatsCard({ stats }) {
           font-style: italic;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

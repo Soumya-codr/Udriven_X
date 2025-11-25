@@ -99,6 +99,10 @@ export async function GET() {
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         include: {
+            weeklyGoals: {
+                where: { status: 'PENDING' },
+                take: 1
+            },
             contributions: {
                 take: 50,
                 orderBy: { timestamp: 'desc' }
@@ -113,6 +117,8 @@ export async function GET() {
     const stats = {
         xp: user.xp,
         level: user.level,
+        credits: user.credits,
+        weeklyGoals: user.weeklyGoals,
         contributions: user.contributions.map(c => ({
             id: c.id,
             message: c.message,

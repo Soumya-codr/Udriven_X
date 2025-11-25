@@ -8,9 +8,10 @@ const fetcher = (...args) => fetch(...args).then(res => res.json());
 
 export default function ChatRoom() {
   const { data: session } = useSession();
-  const { data: messages, mutate } = useSWR('/api/messages', fetcher, { refreshInterval: 2000 });
+  const { data: messages, mutate } = useSWR('/api/messages', fetcher, { refreshInterval: 3000 });
   const [inputText, setInputText] = useState('');
   const [inVoice, setInVoice] = useState(false);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -23,18 +24,21 @@ export default function ChatRoom() {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!inputText.trim() || !session) return;
+    if (!inputText.trim() || !session || sending) return;
 
+    setSending(true);
     try {
       await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: inputText }),
       });
-      mutate(); // Refresh messages immediately
       setInputText('');
+      mutate(); // Refresh messages immediately
     } catch (error) {
       console.error('Failed to send message', error);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -47,20 +51,25 @@ export default function ChatRoom() {
         <style jsx>{`
           .login-prompt {
             text-align: center;
-            padding: 40px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
+            padding: 60px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            backdrop-filter: var(--backdrop-blur);
           }
           button {
-            margin-top: 16px;
-            background: var(--primary);
+            margin-top: 20px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            transition: transform 0.2s;
+          }
+          button:hover {
+            transform: scale(1.05);
           }
         `}</style>
       </div>
@@ -70,10 +79,15 @@ export default function ChatRoom() {
   return (
     <div className="chat-container">
       <div className="voice-sidebar">
-        <h3>Voice Channels</h3>
+        <h3>Channels</h3>
+        <div className="channel active">
+          <div className="channel-header">
+            <span className="channel-name"># general</span>
+          </div>
+        </div>
         <div className="channel">
           <div className="channel-header">
-            <span>🔊 General</span>
+            <span className="channel-name">🔊 Voice Lounge</span>
             <button
               className={`join-btn ${inVoice ? 'leave' : ''}`}
               onClick={() => setInVoice(!inVoice)}
@@ -84,7 +98,7 @@ export default function ChatRoom() {
           <div className="participants">
             {inVoice && (
               <div className="participant me">
-                <div className="avatar">
+                <div className="avatar small">
                   {session.user.image ? <img src={session.user.image} alt="me" /> : session.user.name?.[0]}
                 </div>
                 <span>{session.user.name}</span>
@@ -97,17 +111,27 @@ export default function ChatRoom() {
 
       <div className="text-chat">
         <div className="messages-area">
-          {messages?.map((msg) => (
-            <div key={msg.id} className={`message ${msg.user?.name === session.user.name ? 'own' : ''}`}>
-              <div className="message-header">
-                <span className="username">{msg.user?.name || 'Unknown'}</span>
-                <span className="time">{new Date(msg.createdAt).toLocaleTimeString()}</span>
+          {messages?.map((msg, index) => {
+            const isOwn = msg.user?.name === session.user.name;
+            const showAvatar = index === 0 || messages[index - 1].user?.name !== msg.user?.name;
+
+            return (
+              <div key={msg.id} className={`message ${isOwn ? 'own' : ''} ${showAvatar ? 'new-group' : ''}`}>
+                {!isOwn && showAvatar && (
+                  <div className="message-avatar">
+                    {msg.user?.image ? <img src={msg.user.image} alt={msg.user.name} /> : <div className="fallback-avatar">{msg.user?.name?.[0]}</div>}
+                  </div>
+                )}
+                <div className="message-content-wrapper">
+                  {showAvatar && !isOwn && <span className="username">{msg.user?.name || 'Unknown'}</span>}
+                  <div className="message-bubble">
+                    {msg.content}
+                  </div>
+                  {showAvatar && <span className="time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+                </div>
               </div>
-              <div className="message-bubble">
-                {msg.content}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
 
@@ -117,183 +141,247 @@ export default function ChatRoom() {
             placeholder="Type a message..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            disabled={sending}
           />
-          <button type="submit">Send</button>
+          <button type="submit" disabled={sending || !inputText.trim()}>
+            {sending ? '...' : 'Send'}
+          </button>
         </form>
       </div>
 
       <style jsx>{`
         .chat-container {
           display: grid;
-          grid-template-columns: 250px 1fr;
-          gap: 24px;
-          height: 600px;
-          background: var(--card-bg);
-          border: 1px solid var(--card-border);
-          border-radius: 16px;
+          grid-template-columns: 260px 1fr;
+          height: 650px;
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
+          border-radius: 24px;
           overflow: hidden;
+          box-shadow: var(--glass-shadow);
+          backdrop-filter: var(--backdrop-blur);
         }
         @media (max-width: 768px) {
           .chat-container {
             grid-template-columns: 1fr;
             grid-template-rows: auto 1fr;
-            height: auto;
-            min-height: 600px;
+            height: 80vh;
+          }
+          .voice-sidebar {
+            display: none;
           }
         }
         .voice-sidebar {
           background: rgba(0,0,0,0.2);
-          padding: 20px;
-          border-right: 1px solid var(--card-border);
+          padding: 24px;
+          border-right: 1px solid var(--glass-border);
         }
         .voice-sidebar h3 {
-          font-size: 0.9rem;
+          font-size: 0.75rem;
           text-transform: uppercase;
           color: var(--text-muted);
-          margin-bottom: 16px;
-          letter-spacing: 1px;
+          margin-bottom: 20px;
+          letter-spacing: 1.5px;
+          font-weight: 700;
         }
         .channel {
-          margin-bottom: 20px;
+          margin-bottom: 8px;
+          padding: 10px;
+          border-radius: 8px;
+          transition: background 0.2s;
+          cursor: pointer;
+        }
+        .channel:hover {
+          background: var(--card-hover);
+        }
+        .channel.active {
+          background: var(--card-hover);
+          border: 1px solid var(--glass-border);
         }
         .channel-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 8px;
+          color: var(--foreground);
           font-weight: 500;
+          font-size: 0.95rem;
         }
         .join-btn {
-          background: rgba(255,255,255,0.1);
-          border: none;
-          color: var(--foreground);
-          padding: 4px 10px;
-          border-radius: 4px;
-          font-size: 0.8rem;
+          background: var(--card-bg);
+          border: 1px solid var(--glass-border);
+          color: white;
+          padding: 4px 12px;
+          border-radius: 6px;
+          font-size: 0.75rem;
           cursor: pointer;
+          transition: all 0.2s;
         }
         .join-btn:hover {
-          background: rgba(255,255,255,0.2);
+          background: var(--card-hover);
+          border-color: var(--primary);
         }
         .join-btn.leave {
-          background: var(--error);
-          color: white;
+          background: rgba(239, 68, 68, 0.2);
+          color: #fca5a5;
+          border-color: rgba(239, 68, 68, 0.3);
         }
         .participants {
-          margin-left: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
+          margin-top: 12px;
+          padding-left: 8px;
         }
         .participant {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           font-size: 0.9rem;
           color: var(--text-muted);
         }
-        .participant.me {
-          color: var(--primary);
-          font-weight: 500;
-        }
-        .avatar {
+        .avatar.small {
           width: 24px;
           height: 24px;
-          border-radius: 50%;
-          background: var(--card-border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
           font-size: 0.7rem;
-          color: white;
-          overflow: hidden;
         }
-        .avatar img {
+        
+        .text-chat {
+          display: flex;
+          flex-direction: column;
+          background: transparent;
+        }
+        .messages-area {
+          flex: 1;
+          padding: 24px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .message {
+          display: flex;
+          gap: 12px;
+          max-width: 75%;
+          margin-bottom: 4px;
+          animation: fadeIn 0.2s ease;
+        }
+        .message.new-group {
+          margin-top: 12px;
+        }
+        .message.own {
+          align-self: flex-end;
+          flex-direction: row-reverse;
+        }
+        .message-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          overflow: hidden;
+          flex-shrink: 0;
+          background: #333;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .message-avatar img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
-        .mic-icon {
-          font-size: 0.8rem;
-          margin-left: auto;
-        }
-        .text-chat {
-          display: flex;
-          flex-direction: column;
+        .fallback-avatar {
+          width: 100%;
           height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          background: linear-gradient(135deg, var(--primary), var(--secondary));
         }
-        .messages-area {
-          flex: 1;
-          padding: 20px;
-          overflow-y: auto;
+        .message-content-wrapper {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-        }
-        .message {
-          display: flex;
-          flex-direction: column;
-          max-width: 70%;
-        }
-        .message.own {
-          align-self: flex-end;
-          align-items: flex-end;
-        }
-        .message-header {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 4px;
-          font-size: 0.8rem;
+          gap: 4px;
         }
         .username {
-          font-weight: bold;
-          color: var(--primary);
-        }
-        .time {
+          font-size: 0.8rem;
           color: var(--text-muted);
+          margin-left: 4px;
+        }
+        .message.own .username {
+          display: none;
         }
         .message-bubble {
-          background: var(--card-hover);
+          background: var(--card-bg);
           padding: 10px 16px;
-          border-radius: 12px;
-          border-top-left-radius: 2px;
-          line-height: 1.4;
+          border-radius: 18px;
+          border-top-left-radius: 4px;
+          color: var(--foreground);
+          line-height: 1.5;
+          font-size: 0.95rem;
+          border: 1px solid var(--glass-border);
         }
         .message.own .message-bubble {
-          background: var(--primary);
+          background: linear-gradient(135deg, var(--primary), #8b5cf6);
           color: white;
-          border-radius: 12px;
-          border-top-right-radius: 2px;
+          border-radius: 18px;
+          border-top-left-radius: 18px;
+          border-top-right-radius: 4px;
+          border: none;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
+        .time {
+          font-size: 0.7rem;
+          color: var(--text-muted);
+          margin-left: 4px;
+          opacity: 0.7;
+        }
+        .message.own .time {
+          text-align: right;
+          margin-right: 4px;
+        }
+        
         .input-area {
           padding: 20px;
-          border-top: 1px solid var(--card-border);
+          border-top: 1px solid var(--glass-border);
           display: flex;
           gap: 12px;
+          background: rgba(0,0,0,0.1);
         }
         input {
           flex: 1;
-          background: var(--background);
-          border: 1px solid var(--card-border);
-          padding: 12px;
-          border-radius: 8px;
-          color: var(--foreground);
+          background: var(--card-bg);
+          border: 1px solid var(--glass-border);
+          padding: 14px 20px;
+          border-radius: 14px;
+          color: white;
           outline: none;
+          transition: all 0.2s;
         }
         input:focus {
+          background: var(--card-hover);
           border-color: var(--primary);
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
         button[type="submit"] {
-          background: var(--primary);
+          background: linear-gradient(135deg, var(--primary), #8b5cf6);
           border: none;
           color: white;
-          padding: 0 24px;
-          border-radius: 8px;
-          font-weight: bold;
+          padding: 0 28px;
+          border-radius: 14px;
+          font-weight: 600;
           cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-        button[type="submit"]:hover {
-          background: #7c3aed;
+        button[type="submit"]:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+        }
+        button[type="submit"]:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
