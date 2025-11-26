@@ -128,6 +128,7 @@ export default function Home() {
           <Link href="/" className="active">Dashboard</Link>
           <Link href="/community">Community</Link>
           <Link href="/leaderboard">Leaderboard</Link>
+          {stats?.role === 'ADMIN' && <Link href="/admin" className="admin-link">Admin Panel</Link>}
           <button onClick={() => signOut()} className="btn-logout">Logout</button>
         </div>
       </nav>
@@ -243,6 +244,10 @@ export default function Home() {
         }
         .links a.active, .links a:hover {
           color: var(--foreground);
+        }
+        .admin-link {
+            color: #f472b6 !important; /* Pink color for visibility */
+            font-weight: bold;
         }
         .btn-logout {
             background: rgba(255,255,255,0.1);

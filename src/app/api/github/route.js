@@ -117,6 +117,7 @@ export async function GET() {
     const stats = {
         xp: user.xp,
         level: user.level,
+        role: user.role,
         credits: user.credits,
         weeklyGoals: user.weeklyGoals,
         contributions: user.contributions.map(c => ({
