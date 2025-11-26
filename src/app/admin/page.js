@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('users');
   const [leaves, setLeaves] = useState([]);
 
   useEffect(() => {
