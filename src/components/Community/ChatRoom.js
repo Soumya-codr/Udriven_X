@@ -8,7 +8,7 @@ const fetcher = (...args) => fetch(...args).then(res => res.json());
 
 export default function ChatRoom() {
   const { data: session } = useSession();
-  const { data: messages, mutate } = useSWR('/api/messages', fetcher, { refreshInterval: 3000 });
+  const { data: messages, mutate } = useSWR('/api/messages', fetcher, { refreshInterval: 1000 });
   const [inputText, setInputText] = useState('');
   const [inVoice, setInVoice] = useState(false);
   const [sending, setSending] = useState(false);
@@ -26,19 +26,32 @@ export default function ChatRoom() {
     e.preventDefault();
     if (!inputText.trim() || !session || sending) return;
 
-    setSending(true);
+    const tempId = Date.now();
+    const tempMessage = {
+      id: tempId,
+      content: inputText,
+      createdAt: new Date().toISOString(),
+      user: {
+        name: session.user.name,
+        image: session.user.image
+      }
+    };
+
+    // Optimistic Update: Add message immediately
+    mutate([...(messages || []), tempMessage], false);
+    setInputText('');
+
     try {
       await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: inputText }),
+        body: JSON.stringify({ content: tempMessage.content }),
       });
-      setInputText('');
-      mutate(); // Refresh messages immediately
+      mutate(); // Revalidate to get real ID
     } catch (error) {
       console.error('Failed to send message', error);
-    } finally {
-      setSending(false);
+      // Rollback on error (optional, but good practice)
+      mutate(messages, false);
     }
   };
 
@@ -141,10 +154,9 @@ export default function ChatRoom() {
             placeholder="Type a message..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            disabled={sending}
           />
-          <button type="submit" disabled={sending || !inputText.trim()}>
-            {sending ? '...' : 'Send'}
+          <button type="submit" disabled={!inputText.trim()}>
+            Send
           </button>
         </form>
       </div>
@@ -246,14 +258,17 @@ export default function ChatRoom() {
           display: flex;
           flex-direction: column;
           background: transparent;
+          height: 100%; /* Ensure full height */
+          overflow: hidden; /* Prevent parent scroll */
         }
         .messages-area {
           flex: 1;
           padding: 24px;
-          overflow-y: auto;
+          overflow-y: auto; /* Enable scrolling */
           display: flex;
           flex-direction: column;
           gap: 4px;
+          scroll-behavior: smooth;
         }
         .message {
           display: flex;
