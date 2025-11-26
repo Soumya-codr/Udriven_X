@@ -12,6 +12,7 @@ export default function ChatRoom() {
   const [inputText, setInputText] = useState('');
   const [inVoice, setInVoice] = useState(false);
   const [sending, setSending] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -34,18 +35,23 @@ export default function ChatRoom() {
       user: {
         name: session.user.name,
         image: session.user.image
-      }
+      },
+      replyTo: replyingTo ? { user: { name: replyingTo.user.name } } : null
     };
 
     // Optimistic Update: Add message immediately
     mutate([...(messages || []), tempMessage], false);
     setInputText('');
+    setReplyingTo(null);
 
     try {
       await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: tempMessage.content }),
+        body: JSON.stringify({
+          content: tempMessage.content,
+          replyToId: replyingTo?.id
+        }),
       });
       mutate(); // Revalidate to get real ID
     } catch (error) {
@@ -53,6 +59,15 @@ export default function ChatRoom() {
       // Rollback on error (optional, but good practice)
       mutate(messages, false);
     }
+  };
+
+  const formatContent = (content) => {
+    return content.split(' ').map((word, i) => {
+      if (word.startsWith('@')) {
+        return <span key={i} className="mention">{word} </span>;
+      }
+      return word + ' ';
+    });
   };
 
   if (!session) {
@@ -137,16 +152,34 @@ export default function ChatRoom() {
                 )}
                 <div className="message-content-wrapper">
                   {showAvatar && !isOwn && <span className="username">{msg.user?.name || 'Unknown'}</span>}
+
+                  {msg.replyTo && (
+                    <div className="reply-context">
+                      <small>Replying to <strong>{msg.replyTo.user.name}</strong></small>
+                    </div>
+                  )}
+
                   <div className="message-bubble">
-                    {msg.content}
+                    {formatContent(msg.content)}
                   </div>
-                  {showAvatar && <span className="time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+
+                  <div className="meta-row">
+                    {showAvatar && <span className="time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+                    <button className="reply-btn" onClick={() => setReplyingTo(msg)}>↩ Reply</button>
+                  </div>
                 </div>
               </div>
             );
           })}
           <div ref={messagesEndRef} />
         </div>
+
+        {replyingTo && (
+          <div className="reply-banner">
+            <span>Replying to <strong>{replyingTo.user.name}</strong></span>
+            <button onClick={() => setReplyingTo(null)}>×</button>
+          </div>
+        )}
 
         <form className="input-area" onSubmit={sendMessage}>
           <input
@@ -392,6 +425,56 @@ export default function ChatRoom() {
           opacity: 0.7;
           cursor: not-allowed;
           box-shadow: none;
+        }
+        
+        .reply-banner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(99, 102, 241, 0.1);
+          padding: 8px 20px;
+          border-top: 1px solid var(--glass-border);
+          font-size: 0.85rem;
+          color: var(--primary);
+        }
+        .reply-banner button {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          font-size: 1.2rem;
+          padding: 0 4px;
+        }
+        .reply-banner button:hover {
+          color: var(--error);
+        }
+        .reply-context {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          margin-bottom: 4px;
+          padding-left: 8px;
+          border-left: 2px solid var(--primary);
+          opacity: 0.8;
+        }
+        .reply-btn {
+          opacity: 0;
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          font-size: 0.8rem;
+          margin-left: 8px;
+          transition: opacity 0.2s;
+        }
+        .message:hover .reply-btn {
+          opacity: 1;
+        }
+        .mention {
+          background: rgba(236, 72, 153, 0.2);
+          color: #f472b6;
+          padding: 0 4px;
+          border-radius: 4px;
+          font-weight: 600;
         }
         
         @keyframes fadeIn {

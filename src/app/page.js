@@ -141,7 +141,7 @@ export default function Home() {
             {/* Weekly Goal Section */}
             {stats && (
               <div className="goal-card">
-                <h3>🎯 Weekly Goal</h3>
+                <h3>⚔️ Weekly Quest</h3>
                 {stats.weeklyGoals && stats.weeklyGoals.length > 0 ? (
                   <div className="goal-content">
                     <p className="goal-desc">{stats.weeklyGoals[0].description}</p>
@@ -156,7 +156,7 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  <p className="no-goal">No active goal for this week.</p>
+                  <p className="no-goal">No active quest for this week.</p>
                 )}
               </div>
             )}
@@ -176,7 +176,7 @@ export default function Home() {
 
             <div className="leave-section">
               <Link href="/leaves" className="btn-leave">
-                📅 Request Leave
+                💤 Go AFK / Break
               </Link>
             </div>
           </div>

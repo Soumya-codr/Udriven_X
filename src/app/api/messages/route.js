@@ -11,6 +11,11 @@ export async function GET() {
             include: {
                 user: {
                     select: { name: true, image: true }
+                },
+                replyTo: {
+                    include: {
+                        user: { select: { name: true } }
+                    }
                 }
             }
         });
@@ -29,16 +34,22 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { content } = await request.json();
+        const { content, replyToId } = await request.json();
 
         const message = await prisma.message.create({
             data: {
                 content,
                 userId: session.user.id,
+                replyToId: replyToId || null,
             },
             include: {
                 user: {
                     select: { name: true, image: true }
+                },
+                replyTo: {
+                    include: {
+                        user: { select: { name: true } }
+                    }
                 }
             }
         });

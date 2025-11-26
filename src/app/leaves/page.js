@@ -66,15 +66,15 @@ export default function LeaveRequest() {
             <div className="content">
                 <div className="leave-container">
                     <div className="form-card">
-                        <h2>📅 Request Leave</h2>
+                        <h2>🌴 Taking a Break?</h2>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
-                                <label>Reason</label>
+                                <label>What's the plan?</label>
                                 <textarea
                                     value={formData.reason}
                                     onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                                     required
-                                    placeholder="Why do you need leave?"
+                                    placeholder="Exams, Trip, Burnout, or just chilling..."
                                 />
                             </div>
                             <div className="form-row">
@@ -97,7 +97,7 @@ export default function LeaveRequest() {
                                     />
                                 </div>
                             </div>
-                            <button type="submit" className="btn-submit">Submit Request</button>
+                            <button type="submit" className="btn-submit">Set Status</button>
                         </form>
                     </div>
 

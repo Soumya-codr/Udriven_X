@@ -55,6 +55,10 @@ model Message {
   
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  replyToId String?
+  replyTo   Message?  @relation("ReplyTo", fields: [replyToId], references: [id])
+  replies   Message[] @relation("ReplyTo")
 }
 
 model WeeklyGoal {
