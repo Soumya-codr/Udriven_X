@@ -42,7 +42,7 @@ export default function LeaveRequest() {
             });
 
             if (res.ok) {
-                alert('Leave Request Submitted!');
+                alert('AFK Status Set!');
                 setFormData({ reason: '', startDate: '', endDate: '' });
                 fetchRequests();
             } else {
@@ -102,7 +102,7 @@ export default function LeaveRequest() {
                     </div>
 
                     <div className="history-card">
-                        <h3>My Leave History</h3>
+                        <h3>My AFK History</h3>
                         <div className="history-list">
                             {requests.length > 0 ? (
                                 requests.map(req => (
@@ -117,7 +117,7 @@ export default function LeaveRequest() {
                                     </div>
                                 ))
                             ) : (
-                                <p className="empty">No leave requests yet.</p>
+                                <p className="empty">No AFK history yet.</p>
                             )}
                         </div>
                     </div>
