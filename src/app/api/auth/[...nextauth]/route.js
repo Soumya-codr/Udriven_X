@@ -19,6 +19,7 @@ export const authOptions = {
                 session.user.id = user.id;
                 session.user.xp = user.xp;
                 session.user.level = user.level;
+                session.user.role = user.role;
             }
             return session;
         },
