@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import StatsCard from '@/components/Dashboard/StatsCard';
 import ContributionCalendar from '@/components/Dashboard/ContributionCalendar';
 import Link from 'next/link';
@@ -12,6 +12,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const hasAnimated = useRef(false);
 
   const fetchStats = async () => {
     try {
@@ -36,7 +37,7 @@ export default function Home() {
   }, [status]);
 
   useEffect(() => {
-    if (!loading && stats) {
+    if (!loading && stats && !hasAnimated.current) {
       anime({
         targets: '.animate-entry',
         translateY: [20, 0],
@@ -45,6 +46,7 @@ export default function Home() {
         easing: 'easeOutExpo',
         duration: 800
       });
+      hasAnimated.current = true;
     }
   }, [loading, stats]);
 
