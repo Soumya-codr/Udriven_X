@@ -1,41 +1,8 @@
 :root {
+  background: var(--card-border);
+  border-radius: 4px;
+}
 
-  html,
-  body {
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
-
-  * {
-    box-sizing: border-box;
-    padding: 0;
-    margin: 0;
-  }
-
-  a {
-    color: inherit;
-    text-decoration: none;
-    transition: color 0.2s ease;
-  }
-
-  a:hover {
-    color: var(--primary);
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: var(--background);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: var(--card-border);
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
