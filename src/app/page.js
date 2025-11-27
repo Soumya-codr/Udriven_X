@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import StatsCard from '@/components/Dashboard/StatsCard';
+import ContributionCalendar from '@/components/Dashboard/ContributionCalendar';
 import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
 
@@ -126,6 +127,7 @@ export default function Home() {
         <h1 className="logo">Udriven</h1>
         <div className="links">
           <Link href="/" className="active">Dashboard</Link>
+          <Link href="/about">How to Use</Link>
           <Link href="/community">Community</Link>
           <Link href="/leaderboard">Leaderboard</Link>
           {stats?.role === 'ADMIN' && <Link href="/admin" className="admin-link">Admin Panel</Link>}
@@ -159,6 +161,14 @@ export default function Home() {
                   <p className="no-goal">No active quest for this week.</p>
                 )}
               </div>
+            )}
+
+            {/* Contribution Calendar */}
+            {stats && (
+              <ContributionCalendar
+                contributions={stats.contributions}
+                leaveRequests={stats.leaveRequests}
+              />
             )}
 
             <div className="simulation-card">

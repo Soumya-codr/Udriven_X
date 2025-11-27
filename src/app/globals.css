@@ -1,41 +1,45 @@
 :root {
   /* Premium Glassmorphism Theme */
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: #030305;
+  /* Slightly lighter than pure black for depth */
+  --foreground: #f8fafc;
+  /* Soft white */
 
-  /* Accents */
-  --primary: #6366f1;
-  /* Indigo */
-  --primary-glow: rgba(99, 102, 241, 0.6);
-  --secondary: #ec4899;
-  /* Pink */
-  --secondary-glow: rgba(236, 72, 153, 0.6);
+  /* Accents - Softer, more pastel/neon hybrid */
+  --primary: #818cf8;
+  /* Soft Indigo */
+  --primary-glow: rgba(129, 140, 248, 0.4);
+  --secondary: #f472b6;
+  /* Soft Pink */
+  --secondary-glow: rgba(244, 114, 182, 0.4);
 
-  /* Surfaces */
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-border: rgba(255, 255, 255, 0.1);
-  --card-hover: rgba(255, 255, 255, 0.08);
+  /* Surfaces - Cleaner glass */
+  --card-bg: rgba(255, 255, 255, 0.02);
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-hover: rgba(255, 255, 255, 0.05);
 
   /* Text */
-  --text-muted: #9ca3af;
+  --text-muted: #94a3b8;
 
   /* Status */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
 
   /* Glassmorphism Utilities */
-  --glass-bg: rgba(20, 20, 20, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --backdrop-blur: blur(12px);
+  --glass-bg: rgba(15, 15, 20, 0.7);
+  /* Darker, more opaque for readability */
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --backdrop-blur: blur(16px);
+  /* Stronger blur for premium feel */
 }
 
 body {
   background:
-    radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%),
-    #050505;
+    radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 40%),
+    #030305;
   background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;

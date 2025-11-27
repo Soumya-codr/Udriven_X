@@ -104,8 +104,11 @@ export async function GET() {
                 take: 1
             },
             contributions: {
-                take: 50,
+                take: 365, // Fetch last year for calendar
                 orderBy: { timestamp: 'desc' }
+            },
+            leaveRequests: {
+                orderBy: { startDate: 'desc' }
             }
         }
     });
@@ -120,6 +123,7 @@ export async function GET() {
         role: user.role,
         credits: user.credits,
         weeklyGoals: user.weeklyGoals,
+        leaveRequests: user.leaveRequests,
         contributions: user.contributions.map(c => ({
             id: c.id,
             message: c.message,
