@@ -65,7 +65,37 @@ export default function Home() {
     fetchStats();
   };
 
-  if (status === 'loading' || loading) return <div className="loading">Loading Udriven...</div>;
+  if (status === 'loading' || loading) {
+    return (
+      <main className="main">
+        <nav className="navbar skeleton-nav">
+          <div className="skeleton logo-skeleton" style={{ width: '120px', height: '32px' }}></div>
+          <div className="links">
+            {[1, 2, 3, 4].map(i => <div key={i} className="skeleton" style={{ width: '80px', height: '20px' }}></div>)}
+          </div>
+        </nav>
+        <div className="content">
+          <div className="dashboard-layout">
+            <div className="section-top">
+              <div className="skeleton" style={{ height: '200px', borderRadius: '20px' }}></div>
+              <div className="skeleton" style={{ height: '200px', borderRadius: '20px' }}></div>
+              <div className="skeleton" style={{ height: '200px', borderRadius: '20px' }}></div>
+            </div>
+            <div className="section-middle">
+              <div className="skeleton" style={{ height: '300px', borderRadius: '24px' }}></div>
+            </div>
+          </div>
+        </div>
+        <style jsx>{`
+            .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+            .navbar { display: flex; justify-content: space-between; margin-bottom: 40px; }
+            .links { display: flex; gap: 24px; }
+            .dashboard-layout { display: flex; flex-direction: column; gap: 24px; }
+            .section-top { display: grid; grid-template-columns: 1fr 1fr 0.8fr; gap: 24px; }
+        `}</style>
+      </main>
+    );
+  }
 
   if (status === 'unauthenticated') {
     return (
@@ -90,25 +120,27 @@ export default function Home() {
                 align-items: center;
                 text-align: center;
                 padding: 24px;
-                background: radial-gradient(circle at center, rgba(99, 102, 241, 0.1), transparent 50%);
+                background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15), transparent 60%);
             }
             .landing-title {
-                font-size: 4rem;
+                font-size: 5rem;
                 font-weight: 800;
                 background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 margin-bottom: 16px;
-                letter-spacing: -2px;
+                letter-spacing: -3px;
+                filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.3));
             }
             .landing-subtitle {
-                font-size: 1.5rem;
-                color: #6366f1;
+                font-size: 1.8rem;
+                color: #818cf8;
                 margin-bottom: 24px;
                 font-weight: 600;
+                letter-spacing: -0.5px;
             }
             .landing-desc {
-                font-size: 1.1rem;
+                font-size: 1.2rem;
                 color: var(--text-muted);
                 max-width: 600px;
                 margin-bottom: 48px;
@@ -126,12 +158,12 @@ export default function Home() {
                 border-radius: 50px;
                 border: none;
                 cursor: pointer;
-                transition: transform 0.2s, box-shadow 0.2s;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 box-shadow: 0 0 20px rgba(255,255,255,0.2);
             }
             .btn-login:hover {
-                transform: scale(1.05);
-                box-shadow: 0 0 30px rgba(255,255,255,0.4);
+                transform: scale(1.05) translateY(-2px);
+                box-shadow: 0 10px 40px rgba(255,255,255,0.4);
             }
         `}</style>
       </main>
@@ -141,15 +173,17 @@ export default function Home() {
   return (
     <main className="main">
       <nav className="navbar">
-        <h1 className="logo">Udriven</h1>
-        <div className="links">
-          <Link href="/" className="active">Dashboard</Link>
-          <Link href="/about">How to Use</Link>
-          <Link href="/community">Community</Link>
-          <Link href="/leaderboard">Leaderboard</Link>
-          {stats?.role === 'ADMIN' && <Link href="/admin" className="admin-link">Admin Panel</Link>}
-          <button onClick={() => signOut()} className="btn-logout">Logout</button>
+        <div className="nav-left">
+          <h1 className="logo">Udriven</h1>
         </div>
+        <div className="links">
+          <Link href="/" className="nav-item active">Dashboard</Link>
+          <Link href="/about" className="nav-item">How to Use</Link>
+          <Link href="/community" className="nav-item">Community</Link>
+          <Link href="/leaderboard" className="nav-item">Leaderboard</Link>
+          {stats?.role === 'ADMIN' && <Link href="/admin" className="nav-item admin-link">Admin</Link>}
+        </div>
+        <button onClick={() => signOut()} className="btn-logout">Logout</button>
       </nav>
 
       <div className="content">
@@ -164,13 +198,18 @@ export default function Home() {
             <div className="quest-wrapper animate-entry">
               {/* Weekly Goal */}
               {stats && (
-                <div className="goal-card">
-                  <h3>⚔️ Weekly Quest</h3>
+                <div className="card goal-card">
+                  <div className="card-header">
+                    <h3>⚔️ Weekly Quest</h3>
+                  </div>
                   {stats.weeklyGoals && stats.weeklyGoals.length > 0 ? (
                     <div className="goal-content">
                       <p className="goal-desc">{stats.weeklyGoals[0].description}</p>
                       <div className="goal-progress">
-                        <span>{stats.weeklyGoals[0].current} / {stats.weeklyGoals[0].target}</span>
+                        <div className="progress-labels">
+                          <span>Progress</span>
+                          <span>{stats.weeklyGoals[0].current} / {stats.weeklyGoals[0].target}</span>
+                        </div>
                         <div className="progress-bar">
                           <div
                             className="progress-fill"
@@ -180,7 +219,10 @@ export default function Home() {
                       </div>
                     </div>
                   ) : (
-                    <p className="no-goal">No active quest for this week.</p>
+                    <div className="empty-state">
+                      <span className="empty-icon">💤</span>
+                      <p>No active quest. Enjoy your break!</p>
+                    </div>
                   )}
                 </div>
               )}
@@ -189,16 +231,24 @@ export default function Home() {
             <div className="actions-wrapper animate-entry">
               {/* Simulation & Leave */}
               <div className="actions-grid">
-                <div className="simulation-card">
-                  <h3>⚡ Actions</h3>
+                <div className="card simulation-card">
+                  <div className="card-header">
+                    <h3>⚡ Actions</h3>
+                  </div>
                   <div className="buttons">
-                    <button onClick={() => simulateEvent('push')}>Push</button>
-                    <button onClick={() => simulateEvent('pull_request')}>PR</button>
+                    <button className="action-btn push-btn" onClick={() => simulateEvent('push')}>
+                      <span>Push</span>
+                      <span className="xp-tag">+10 XP</span>
+                    </button>
+                    <button className="action-btn pr-btn" onClick={() => simulateEvent('pull_request')}>
+                      <span>PR</span>
+                      <span className="xp-tag">+50 XP</span>
+                    </button>
                   </div>
                 </div>
-                <div className="leave-card-small">
+                <div className="leave-wrapper">
                   <Link href="/leaves" className="btn-leave">
-                    💤 Go AFK
+                    <span>💤 Go AFK</span>
                   </Link>
                 </div>
               </div>
@@ -207,19 +257,20 @@ export default function Home() {
 
           {/* Middle Section: Recent Activity (Full Width) */}
           <div className="section-middle animate-entry">
-            <div className="activity-feed">
+            <div className="card activity-feed">
               <div className="feed-header">
                 <h3>Recent Activity</h3>
-                <span className="badge">Live Feed</span>
+                <div className="live-indicator">
+                  <span className="dot"></span>
+                  Live Feed
+                </div>
               </div>
               <div className="feed-grid">
                 {stats && stats.contributions.slice(0, 4).map((item) => (
                   <div key={item.id} className="feed-card">
                     <div className="feed-top">
-                      <div className="feed-icon-wrapper">
-                        <span className="feed-icon">
-                          {item.type === 'PushEvent' ? '🚀' : item.type === 'PullRequestEvent' ? '🔀' : '⚡'}
-                        </span>
+                      <div className={`feed-icon-wrapper ${item.type === 'PushEvent' ? 'icon-push' : 'icon-pr'}`}>
+                        {item.type === 'PushEvent' ? '🚀' : item.type === 'PullRequestEvent' ? '🔀' : '⚡'}
                       </div>
                       <span className="feed-time">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
@@ -228,7 +279,10 @@ export default function Home() {
                   </div>
                 ))}
                 {stats && stats.contributions.length === 0 && (
-                  <p className="empty-feed">No recent activity to show.</p>
+                  <div className="empty-feed">
+                    <span className="empty-icon">📝</span>
+                    <p>No recent activity. Start coding!</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -251,60 +305,81 @@ export default function Home() {
         .main {
           min-height: 100vh;
           padding: 24px;
-          max-width: 1400px; /* Increased max-width for 3 columns */
+          max-width: 1400px;
           margin: 0 auto;
+          padding-top: 100px; /* Space for sticky navbar */
         }
-        .loading {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          color: var(--text-muted);
-        }
+        
+        /* Navbar Polish */
         .navbar {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 95%;
+          max-width: 1350px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 40px;
-          padding-bottom: 20px;
-          border-bottom: 1px solid var(--card-border);
+          padding: 16px 32px;
+          background: rgba(10, 10, 10, 0.8);
+          backdrop-filter: blur(16px);
+          border: 1px solid var(--glass-border);
+          border-radius: 100px;
+          z-index: 1000;
+          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
         .logo {
           font-size: 1.5rem;
-          font-weight: bold;
-          background: linear-gradient(90deg, var(--primary), var(--secondary));
+          font-weight: 800;
+          background: var(--gradient-primary);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          letter-spacing: -1px;
         }
         .links {
           display: flex;
-          gap: 24px;
-          align-items: center;
+          gap: 8px;
+          background: rgba(255,255,255,0.03);
+          padding: 6px;
+          border-radius: 50px;
+          border: 1px solid rgba(255,255,255,0.05);
         }
-        .links a {
+        .nav-item {
           color: var(--text-muted);
           font-weight: 500;
+          padding: 8px 20px;
+          border-radius: 30px;
+          transition: all 0.2s;
+          font-size: 0.95rem;
         }
-        .links a.active, .links a:hover {
+        .nav-item:hover {
           color: var(--foreground);
+          background: rgba(255,255,255,0.05);
+        }
+        .nav-item.active {
+          color: white;
+          background: rgba(255,255,255,0.1);
+          font-weight: 600;
         }
         .admin-link {
             color: #f472b6 !important;
-            font-weight: bold;
         }
         .btn-logout {
-            background: rgba(255,255,255,0.1);
-            border: none;
+            background: transparent;
+            border: 1px solid var(--card-border);
             color: var(--text-muted);
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 24px;
+            border-radius: 30px;
             cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 600;
             transition: all 0.2s;
         }
         .btn-logout:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
             color: white;
+            border-color: var(--text-muted);
         }
 
         /* Dashboard Layout */
@@ -314,7 +389,7 @@ export default function Home() {
             gap: 24px;
         }
 
-        /* Top Section: 3 Columns */
+        /* Top Section */
         .section-top {
             display: grid;
             grid-template-columns: 1fr 1fr 0.8fr;
@@ -322,46 +397,59 @@ export default function Home() {
             align-items: stretch;
         }
         @media (max-width: 1024px) {
-            .section-top {
-                grid-template-columns: 1fr 1fr;
-            }
-            .actions-wrapper {
-                grid-column: span 2;
-            }
+            .section-top { grid-template-columns: 1fr 1fr; }
+            .actions-wrapper { grid-column: span 2; }
         }
         @media (max-width: 768px) {
-            .section-top {
-                grid-template-columns: 1fr;
+            .section-top { grid-template-columns: 1fr; }
+            .actions-wrapper { grid-column: span 1; }
+            .navbar { 
+                width: 100%; top: 0; border-radius: 0; 
+                padding: 16px; flex-direction: column; gap: 16px;
             }
-            .actions-wrapper {
-                grid-column: span 1;
-            }
+            .main { padding-top: 140px; }
+            .links { flex-wrap: wrap; justify-content: center; }
         }
 
-        /* Cards */
-        .goal-card, .simulation-card, .leave-card-small {
+        /* Generic Card Style */
+        .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 24px;
-            backdrop-filter: var(--backdrop-blur);
-            transition: transform 0.2s;
+            backdrop-filter: blur(10px);
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            transition: transform 0.2s, border-color 0.2s;
         }
-        .goal-card:hover, .simulation-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255,255,255,0.1);
+        .card:hover {
+            border-color: rgba(255,255,255,0.15);
         }
-        .goal-content { margin-top: 12px; }
-        .goal-desc { font-weight: 500; margin-bottom: 12px; font-size: 1.1rem; }
-        .goal-progress { display: flex; flex-direction: column; gap: 6px; }
-        .goal-progress span { font-size: 0.85rem; color: var(--text-muted); align-self: flex-end; }
-        .progress-bar { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--success), #34d399); transition: width 0.5s ease; }
-        
+        .card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Goal Card */
+        .goal-content { margin-top: auto; margin-bottom: auto; }
+        .goal-desc { 
+            font-size: 1.1rem; color: var(--text-muted); margin-bottom: 20px; 
+            line-height: 1.5;
+        }
+        .progress-labels {
+            display: flex; justify-content: space-between; margin-bottom: 8px;
+            font-size: 0.85rem; color: var(--text-dim); font-weight: 500;
+        }
+        .progress-bar { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--success); border-radius: 4px; }
+
+        /* Actions Card */
         .actions-grid {
             display: flex;
             flex-direction: column;
@@ -369,71 +457,85 @@ export default function Home() {
             height: 100%;
         }
         .simulation-card { flex: 1; }
-        .leave-card-small { flex: 0.8; }
-
-        .simulation-card h3 { font-size: 1rem; margin-bottom: 12px; }
-        .buttons { display: flex; gap: 8px; }
-        .buttons button {
+        .buttons { display: flex; gap: 12px; height: 100%; }
+        .action-btn {
             flex: 1;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.03);
             border: 1px solid var(--card-border);
-            color: var(--text-muted);
-            padding: 8px;
-            border-radius: 8px;
+            border-radius: 16px;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: var(--text-main);
+            font-weight: 600;
         }
-        .buttons button:hover {
-            background: var(--primary);
-            color: white;
+        .action-btn:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
             border-color: var(--primary);
         }
+        .xp-tag {
+            font-size: 0.7rem;
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .leave-wrapper { flex: 0.6; }
         .btn-leave {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 100%;
-            text-align: center;
-            background: rgba(239, 68, 68, 0.1);
+            height: 100%;
+            background: rgba(239, 68, 68, 0.05);
             color: #fca5a5;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 20px;
+            border: 1px solid rgba(239, 68, 68, 0.1);
             transition: all 0.2s;
             font-weight: 600;
         }
         .btn-leave:hover {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
             transform: scale(1.02);
         }
 
-        /* Activity Feed Full Width */
-        .activity-feed {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 28px;
-            backdrop-filter: var(--backdrop-blur);
-        }
+        /* Activity Feed */
         .feed-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
         }
-        .badge {
-            background: rgba(16, 185, 129, 0.2);
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
             color: var(--success);
-            font-size: 0.7rem;
-            padding: 4px 8px;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 4px 12px;
             border-radius: 20px;
-            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+        }
+        .dot {
+            width: 6px; height: 6px; background: var(--success); border-radius: 50%;
             animation: pulse 2s infinite;
         }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        
         .feed-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
         }
         .feed-card {
             background: rgba(255,255,255,0.02);
@@ -443,54 +545,63 @@ export default function Home() {
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .feed-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0; transition: opacity 0.2s;
         }
         .feed-card:hover {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.04);
             transform: translateY(-4px);
-            border-color: rgba(255,255,255,0.1);
         }
+        .feed-card:hover::before { opacity: 1; }
+        
         .feed-top {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
         }
         .feed-icon-wrapper {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
         }
-        .feed-time {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
+        .icon-push { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+        .icon-pr { background: rgba(168, 85, 247, 0.1); color: var(--secondary); }
+        
+        .feed-time { font-size: 0.8rem; color: var(--text-dim); }
         .feed-msg {
-            font-weight: 600;
-            font-size: 0.95rem;
+            font-weight: 500;
+            font-size: 1rem;
             color: var(--foreground);
-            line-height: 1.4;
+            line-height: 1.5;
         }
         .feed-xp-badge {
             align-self: flex-start;
-            background: rgba(99, 102, 241, 0.15);
-            color: #818cf8;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
             padding: 4px 10px;
             border-radius: 8px;
-            font-weight: 700;
+            font-weight: 600;
             font-size: 0.8rem;
         }
-        .empty-feed {
-            color: var(--text-muted);
-            text-align: center;
-            grid-column: 1 / -1;
-            padding: 20px;
-            font-style: italic;
+        
+        /* Empty States */
+        .empty-state, .empty-feed {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 12px; color: var(--text-dim); padding: 20px; text-align: center;
         }
+        .empty-icon { font-size: 2rem; opacity: 0.5; }
       `}</style>
     </main>
   );

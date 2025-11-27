@@ -1,88 +1,41 @@
 :root {
-  /* Premium Glassmorphism Theme */
-  --background: #030305;
-  /* Slightly lighter than pure black for depth */
-  --foreground: #f8fafc;
-  /* Soft white */
 
-  /* Accents - Softer, more pastel/neon hybrid */
-  --primary: #818cf8;
-  /* Soft Indigo */
-  --primary-glow: rgba(129, 140, 248, 0.4);
-  --secondary: #f472b6;
-  /* Soft Pink */
-  --secondary-glow: rgba(244, 114, 182, 0.4);
+  html,
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 
-  /* Surfaces - Cleaner glass */
-  --card-bg: rgba(255, 255, 255, 0.02);
-  --card-border: rgba(255, 255, 255, 0.06);
-  --card-hover: rgba(255, 255, 255, 0.05);
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
 
-  /* Text */
-  --text-muted: #94a3b8;
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
 
-  /* Status */
-  --success: #34d399;
-  --warning: #fbbf24;
-  --error: #f87171;
+  a:hover {
+    color: var(--primary);
+  }
 
-  /* Glassmorphism Utilities */
-  --glass-bg: rgba(15, 15, 20, 0.7);
-  /* Darker, more opaque for readability */
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  --backdrop-blur: blur(16px);
-  /* Stronger blur for premium feel */
-}
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
 
-body {
-  background:
-    radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 40%),
-    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 40%),
-    #030305;
-  background-attachment: fixed;
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+  ::-webkit-scrollbar-thumb {
+    background: var(--card-border);
+    border-radius: 4px;
+  }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: var(--primary);
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--card-border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
-}
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
