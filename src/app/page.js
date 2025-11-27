@@ -6,6 +6,8 @@ import ContributionCalendar from '@/components/Dashboard/ContributionCalendar';
 import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
 
+import anime from 'animejs';
+
 export default function Home() {
   const { data: session, status } = useSession();
   const [stats, setStats] = useState(null);
@@ -32,6 +34,19 @@ export default function Home() {
       setLoading(false);
     }
   }, [status]);
+
+  useEffect(() => {
+    if (!loading && stats) {
+      anime({
+        targets: '.animate-entry',
+        translateY: [20, 0],
+        opacity: [0, 1],
+        delay: anime.stagger(100),
+        easing: 'easeOutExpo',
+        duration: 800
+      });
+    }
+  }, [loading, stats]);
 
   const simulateEvent = async (type) => {
     const payload = {
@@ -136,81 +151,97 @@ export default function Home() {
       </nav>
 
       <div className="content">
-        <div className="dashboard-grid">
-          <div className="left-col">
-            {stats && <StatsCard stats={stats} />}
+        <div className="dashboard-layout">
 
-            {/* Weekly Goal Section */}
-            {stats && (
-              <div className="goal-card">
-                <h3>⚔️ Weekly Quest</h3>
-                {stats.weeklyGoals && stats.weeklyGoals.length > 0 ? (
-                  <div className="goal-content">
-                    <p className="goal-desc">{stats.weeklyGoals[0].description}</p>
-                    <div className="goal-progress">
-                      <span>{stats.weeklyGoals[0].current} / {stats.weeklyGoals[0].target}</span>
-                      <div className="progress-bar">
-                        <div
-                          className="progress-fill"
-                          style={{ width: `${Math.min((stats.weeklyGoals[0].current / stats.weeklyGoals[0].target) * 100, 100)}%` }}
-                        ></div>
+          {/* Top Section: 3 Columns (Stats, Quest, Actions) */}
+          <div className="section-top">
+            <div className="stats-wrapper animate-entry">
+              {stats && <StatsCard stats={stats} />}
+            </div>
+
+            <div className="quest-wrapper animate-entry">
+              {/* Weekly Goal */}
+              {stats && (
+                <div className="goal-card">
+                  <h3>⚔️ Weekly Quest</h3>
+                  {stats.weeklyGoals && stats.weeklyGoals.length > 0 ? (
+                    <div className="goal-content">
+                      <p className="goal-desc">{stats.weeklyGoals[0].description}</p>
+                      <div className="goal-progress">
+                        <span>{stats.weeklyGoals[0].current} / {stats.weeklyGoals[0].target}</span>
+                        <div className="progress-bar">
+                          <div
+                            className="progress-fill"
+                            style={{ width: `${Math.min((stats.weeklyGoals[0].current / stats.weeklyGoals[0].target) * 100, 100)}%` }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
+                  ) : (
+                    <p className="no-goal">No active quest for this week.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="actions-wrapper animate-entry">
+              {/* Simulation & Leave */}
+              <div className="actions-grid">
+                <div className="simulation-card">
+                  <h3>⚡ Actions</h3>
+                  <div className="buttons">
+                    <button onClick={() => simulateEvent('push')}>Push</button>
+                    <button onClick={() => simulateEvent('pull_request')}>PR</button>
                   </div>
-                ) : (
-                  <p className="no-goal">No active quest for this week.</p>
+                </div>
+                <div className="leave-card-small">
+                  <Link href="/leaves" className="btn-leave">
+                    💤 Go AFK
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Section: Recent Activity (Full Width) */}
+          <div className="section-middle animate-entry">
+            <div className="activity-feed">
+              <div className="feed-header">
+                <h3>Recent Activity</h3>
+                <span className="badge">Live Feed</span>
+              </div>
+              <div className="feed-grid">
+                {stats && stats.contributions.slice(0, 4).map((item) => (
+                  <div key={item.id} className="feed-card">
+                    <div className="feed-top">
+                      <div className="feed-icon-wrapper">
+                        <span className="feed-icon">
+                          {item.type === 'PushEvent' ? '🚀' : item.type === 'PullRequestEvent' ? '🔀' : '⚡'}
+                        </span>
+                      </div>
+                      <span className="feed-time">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p className="feed-msg">{item.message}</p>
+                    <div className="feed-xp-badge">+{item.xp} XP</div>
+                  </div>
+                ))}
+                {stats && stats.contributions.length === 0 && (
+                  <p className="empty-feed">No recent activity to show.</p>
                 )}
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Contribution Calendar */}
+          {/* Bottom Section: Calendar */}
+          <div className="section-bottom animate-entry">
             {stats && (
               <ContributionCalendar
                 contributions={stats.contributions}
                 leaveRequests={stats.leaveRequests}
               />
             )}
-
-            <div className="simulation-card">
-              <h3>Simulate Activity</h3>
-              <p>Trigger GitHub events to test gamification.</p>
-              <div className="buttons">
-                <button onClick={() => simulateEvent('push')}>
-                  Push Code (+10 XP)
-                </button>
-                <button onClick={() => simulateEvent('pull_request')}>
-                  Open PR (+50 XP)
-                </button>
-              </div>
-            </div>
-
-            <div className="leave-section">
-              <Link href="/leaves" className="btn-leave">
-                💤 Go AFK / Break
-              </Link>
-            </div>
           </div>
 
-          <div className="right-col">
-            <div className="activity-feed">
-              <h3>Recent Activity</h3>
-              <div className="feed-list">
-                {stats && stats.contributions.map((item) => (
-                  <div key={item.id} className="feed-item">
-                    <span className="feed-icon">⚡</span>
-                    <div className="feed-content">
-                      <p>{item.message}</p>
-                      <span className="feed-time">{new Date(item.timestamp).toLocaleTimeString()}</span>
-                    </div>
-                    <span className="feed-xp">+{item.xp} XP</span>
-                  </div>
-                ))}
-                {stats && stats.contributions.length === 0 && (
-                  <p className="empty-feed">No recent activity.</p>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -218,7 +249,7 @@ export default function Home() {
         .main {
           min-height: 100vh;
           padding: 24px;
-          max-width: 1200px;
+          max-width: 1400px; /* Increased max-width for 3 columns */
           margin: 0 auto;
         }
         .loading {
@@ -256,7 +287,7 @@ export default function Home() {
           color: var(--foreground);
         }
         .admin-link {
-            color: #f472b6 !important; /* Pink color for visibility */
+            color: #f472b6 !important;
             font-weight: bold;
         }
         .btn-logout {
@@ -273,168 +304,190 @@ export default function Home() {
             background: rgba(255,255,255,0.2);
             color: white;
         }
-        .dashboard-grid {
-          display: grid;
-          grid-template-columns: 1fr 1.5fr;
-          gap: 24px;
-        }
-        @media (max-width: 768px) {
-          .dashboard-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-        .simulation-card {
-          margin-top: 24px;
-          background: var(--card-bg);
-          border: 1px solid var(--card-border);
-          border-radius: 16px;
-          padding: 24px;
-          backdrop-filter: var(--backdrop-blur);
-        }
-        .simulation-card h3 {
-          margin-bottom: 8px;
-        }
-        .simulation-card p {
-          color: var(--text-muted);
-          margin-bottom: 16px;
-          font-size: 0.9rem;
-        }
-        .buttons {
-          display: flex;
-          gap: 12px;
-        }
-        button {
-          background: var(--card-hover);
-          border: 1px solid var(--card-border);
-          color: var(--foreground);
-          padding: 10px 16px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-weight: 500;
-        }
-        button:hover {
-          background: var(--primary);
-          border-color: var(--primary);
-          color: white;
-        }
-        .activity-feed {
-          background: var(--card-bg);
-          border: 1px solid var(--card-border);
-          border-radius: 16px;
-          padding: 24px;
-          height: 100%;
-          min-height: 400px;
-          backdrop-filter: var(--backdrop-blur);
-        }
-        .activity-feed h3 {
-          margin-bottom: 20px;
-        }
-        .feed-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .feed-item {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-          animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .feed-icon {
-          font-size: 1.2rem;
-          background: rgba(255,255,255,0.05);
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .feed-content {
-          flex: 1;
-        }
-        .feed-content p {
-          font-weight: 500;
-        }
-        .feed-time {
-          font-size: 0.8rem;
-          color: var(--text-muted);
-        }
-        .feed-xp {
-          color: var(--success);
-          font-weight: bold;
-        }
-        .empty-feed {
-          color: var(--text-muted);
-          text-align: center;
-          margin-top: 40px;
-        }
-        .goal-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 24px;
-            margin-top: 24px;
-            backdrop-filter: var(--backdrop-blur);
-        }
-        .goal-content {
-            margin-top: 12px;
-        }
-        .goal-desc {
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-        .goal-progress {
+
+        /* Dashboard Layout */
+        .dashboard-layout {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 24px;
         }
-        .goal-progress span {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            align-self: flex-end;
+
+        /* Top Section: 3 Columns */
+        .section-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr 0.8fr;
+            gap: 24px;
+            align-items: stretch;
         }
-        .progress-bar {
-            height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-            overflow: hidden;
+        @media (max-width: 1024px) {
+            .section-top {
+                grid-template-columns: 1fr 1fr;
+            }
+            .actions-wrapper {
+                grid-column: span 2;
+            }
         }
-        .progress-fill {
+        @media (max-width: 768px) {
+            .section-top {
+                grid-template-columns: 1fr;
+            }
+            .actions-wrapper {
+                grid-column: span 1;
+            }
+        }
+
+        /* Cards */
+        .goal-card, .simulation-card, .leave-card-small {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: var(--backdrop-blur);
+            transition: transform 0.2s;
             height: 100%;
-            background: linear-gradient(90deg, #10b981, #34d399);
-            transition: width 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .no-goal {
+        .goal-card:hover, .simulation-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .goal-content { margin-top: 12px; }
+        .goal-desc { font-weight: 500; margin-bottom: 12px; font-size: 1.1rem; }
+        .goal-progress { display: flex; flex-direction: column; gap: 6px; }
+        .goal-progress span { font-size: 0.85rem; color: var(--text-muted); align-self: flex-end; }
+        .progress-bar { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--success), #34d399); transition: width 0.5s ease; }
+        
+        .actions-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+        }
+        .simulation-card { flex: 1; }
+        .leave-card-small { flex: 0.8; }
+
+        .simulation-card h3 { font-size: 1rem; margin-bottom: 12px; }
+        .buttons { display: flex; gap: 8px; }
+        .buttons button {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
             color: var(--text-muted);
-            font-style: italic;
-            margin-top: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
         }
-        .leave-section {
-            margin-top: 24px;
+        .buttons button:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
         .btn-leave {
-            display: block;
             width: 100%;
             text-align: center;
             background: rgba(239, 68, 68, 0.1);
             color: #fca5a5;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 12px;
             border: 1px solid rgba(239, 68, 68, 0.2);
             transition: all 0.2s;
-            font-weight: 500;
+            font-weight: 600;
         }
         .btn-leave:hover {
             background: rgba(239, 68, 68, 0.2);
-            transform: translateY(-2px);
+            transform: scale(1.02);
+        }
+
+        /* Activity Feed Full Width */
+        .activity-feed {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: var(--backdrop-blur);
+        }
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: pulse 2s infinite;
+        }
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        .feed-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .feed-card:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .feed-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .feed-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .feed-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .feed-msg {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--foreground);
+            line-height: 1.4;
+        }
+        .feed-xp-badge {
+            align-self: flex-start;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+        .empty-feed {
+            color: var(--text-muted);
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 20px;
+            font-style: italic;
         }
       `}</style>
     </main>
